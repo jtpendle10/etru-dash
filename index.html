@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>eTRU Enabled Count</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #count {
+      font-size: 2rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>eTRU Enabled Spaces</h1>
+    <div id="count">Loading...</div>
+  </div>
+
+  <script>
+    const query = `
+      query eTruSpaceAssignments($filter: ParkSessionFilter) {
+        parkSessions(filter: $filter) {
+          nodes {
+            space {
+              etruEnabled
+            }
+          }
+        }
+      }
+    `;
+
+    const variables = {
+      filter: {} // Add filters if needed
+    };
+
+    fetch('https://trailer-proxy.onrender.com/proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+        // Optionally include Authorization header here
+        // 'Authorization': 'Bearer your-token-here'
+      },
+      body: JSON.stringify({ query, variables })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const nodes = data?.data?.parkSessions?.nodes || [];
+      const count = nodes.filter(n => n.space?.etruEnabled === true).length;
+      document.getElementById('count').textContent = count;
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('count').textContent = 'Error fetching data';
+    });
+  </script>
+</body>
+</html>
