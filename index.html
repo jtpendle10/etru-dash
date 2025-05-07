@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>eTRU Enabled Count</title>
+  <title>eTRU Enabled Yard Spaces (Last 30 Days)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -20,22 +20,26 @@
 </head>
 <body>
   <div>
-    <h1>eTRU Space Assignments (Last 30 Days)</h1>
+    <h1>eTRU Enabled Yard Spaces (Last 30 Days)</h1>
     <div id="count">Loading...</div>
   </div>
 
   <script>
-    // Get today's date minus 30 days in YYYY-MM-DD format
+    // Calculate the date 30 days ago
     const date = new Date();
     date.setDate(date.getDate() - 30);
-    const isoDate = date.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    const isoDate = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
+    // GraphQL query
     const query = `
       query eTruSpaceAssignments($filter: ParkSessionFilter) {
         parkSessions(filter: $filter) {
           nodes {
             space {
               etruEnabled
+              spaceCategory {
+                name
+              }
             }
           }
         }
@@ -50,7 +54,7 @@
       }
     };
 
-    fetch('https://your-render-url.onrender.com/proxy', {
+    fetch('https://trailer-proxy.onrender.com/proxy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -60,7 +64,10 @@
     .then(res => res.json())
     .then(data => {
       const nodes = data?.data?.parkSessions?.nodes || [];
-      const count = nodes.filter(n => n.space?.etruEnabled === false).length;
+      const count = nodes.filter(n =>
+        n.space?.etruEnabled === false &&
+        n.space?.spaceCategory?.name?.toLowerCase() === 'yard'
+      ).length;
       document.getElementById('count').textContent = count;
     })
     .catch(err => {
