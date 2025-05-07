@@ -20,11 +20,16 @@
 </head>
 <body>
   <div>
-    <h1>eTRU Enabled Spaces</h1>
+    <h1>eTRU Space Assignments (Last 30 Days)</h1>
     <div id="count">Loading...</div>
   </div>
 
   <script>
+    // Get today's date minus 30 days in YYYY-MM-DD format
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    const isoDate = date.toISOString().split('T')[0]; // "YYYY-MM-DD"
+
     const query = `
       query eTruSpaceAssignments($filter: ParkSessionFilter) {
         parkSessions(filter: $filter) {
@@ -38,22 +43,24 @@
     `;
 
     const variables = {
-      filter: {} // Add filters if needed
+      filter: {
+        startTime: {
+          greaterThan: isoDate
+        }
+      }
     };
 
-    fetch('https://trailer-proxy.onrender.com/proxy', {
+    fetch('https://your-render-url.onrender.com/proxy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
-        // Optionally include Authorization header here
-        // 'Authorization': 'Bearer your-token-here'
       },
       body: JSON.stringify({ query, variables })
     })
     .then(res => res.json())
     .then(data => {
       const nodes = data?.data?.parkSessions?.nodes || [];
-      const count = nodes.filter(n => n.space?.etruEnabled === true).length;
+      const count = nodes.filter(n => n.space?.etruEnabled === false).length;
       document.getElementById('count').textContent = count;
     })
     .catch(err => {
